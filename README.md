@@ -6,16 +6,16 @@ This is a variation of the acrotelm and catotelm modelling approach. In the trad
 
 The outputs of this method are the posterior distributions of the parameters of both Clymo models. 
 
-![Posterior Distributios of both Climo models](./Figures/Posterior_parameters.pdf)
+![Posterior Distributios of both Climo models](Figures/Posterior_parameters.pdf)
 
 Because the model also has to infer the $w(x)$ function the posterior distribution of the parameters of the function can also be obtained.
 
 
-![Posterior Distributios of the $w(x)$ function](./Figures/Bon_posterior.pdf)
+![Posterior Distributios of the $w(x)$ function](Figures/Bon_posterior.pdf)
 
 Lastly, this posterior parameters can be use to plot the posterior transition function. 
 
-![Posterior transition function](./Figures/Cat_limit.pdf)
+![Posterior transition function](Figures/Cat_limit.pdf)
 
 
 
