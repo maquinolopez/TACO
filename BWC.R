@@ -100,8 +100,8 @@ if (newrun){
   state <- as.matrix(read.csv('state.csv'))
   twalk <- Runtwalk( dim=length(ini()),  Tr=th *(burnin+s_size),  Obj=obj, Supp=supp, x0=state[1,], xp0=state[2,],PlotObj = FALSE,PlotLogPost = FALSE) 
 }
-subsample = seq(1, length(info$output[,1]), th)
-sample <- tail(info$output[subsample,],s_size)
+subsample = seq(1, length(twalk$output[,1]), th)
+sample <- tail(twalk$output[subsample,],s_size)
 
 ##
 # Plot results
@@ -109,20 +109,20 @@ sample <- tail(info$output[subsample,],s_size)
 
 # energy plot
 par(mfrow=c(1,1))
-plot(tail(info$Us[subsample],s_size),type = 'l')
+plot(tail(twalk$Us[subsample],s_size),type = 'l',ylab = 'Log posterior',xlab='Iterations')
 # posterior distributions of parameters
 par(mfrow=c(2,2))
 plot(density(sample[,1]),main='Density a Cato')
 plot(density(sample[,2]),main='Density b Cato')
 plot(density(sample[,3]),main='Density a Acro')
 plot(density(sample[,4]),main='Density b Acro')
-# posterior distribution of boundery parameters
+# posterior distribution of boundary parameters
 par(mfrow=c(3,1))
-hist(sample[,5],main='Delay')
+hist(sample[,5],main='Delay',xlab = 'cm')
 change_date <-  approx(site$depth,site$zeroed_age,sample[,6])$y
-hist(change_date,main='A/C boundery age')
+hist(change_date,main='A/C boundery age',xlab = 'years before coring')
 points(1960,0,pch=16,col=rgb(1,0,0,.9))
-hist(sample[,6],main='A/C boundery depth ')
+hist(sample[,6],main='A/C boundery depth ',xlab = 'cm')
 points(63,0,pch=16,col=rgb(1,0,0,.9))
 # Cato limit function
 par(mfrow=c(1,1))
@@ -143,7 +143,8 @@ for (s in 1:dim(sample)[1]){
   abline(v=sample[s,6],col=rgb(0,1,0,.01))
 }
 points(boun_p,0,col=rgb(1,0,0,.8),pch='|')
-# data vs sumulated over ages
+# data vs simulated over ages
+par(mfrow=c(1,1))
 plot(top_ages,Data,type='l',col=rgb(1,0,0,.5))
 polygon(c(top_ages,rev(top_ages) ), c(Data*(.9), rev(Data*(1.1))), col=rgb(1,0,0,.5),border = NA)
 for (s in 1:dim(sample)[1]){
