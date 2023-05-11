@@ -10,7 +10,7 @@ The outputs of this method are the posterior distributions of the parameters of 
 
 Because the model also has to infer the $w(x)$ function the posterior distribution of the parameters of the function can also be obtained.
 
-![Posterior Distributios of the $w(x)$ function](https://github.com/maquinolopez/Bayesian_Carbon_Acc/blob/main/Figures/Posterior_parameters.png)
+![Posterior Distributios of the $w(x)$ function](https://github.com/maquinolopez/Bayesian_Carbon_Acc/blob/main/Figures/Bon_posterior.png)
 
 Lastly, this posterior parameters can be use to plot the posterior transition function. 
 
