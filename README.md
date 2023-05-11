@@ -6,15 +6,15 @@ This is a variation of the acrotelm and catotelm modelling approach. In the trad
 
 The outputs of this method are the posterior distributions of the parameters of both Clymo models. 
 
-![Posterior Distributios of both Climo models](https://github.com/maquinolopez/Bayesian_Carbon_Acc/blob/main/Figures/Posterior_parameters.pdf)
+![Posterior Distributios of both Climo models](https://github.com/maquinolopez/Bayesian_Carbon_Acc/blob/main/Figures/Posterior_parameters.png)
+
 Because the model also has to infer the $w(x)$ function the posterior distribution of the parameters of the function can also be obtained.
 
-
-![Posterior Distributios of the $w(x)$ function](https://github.com/maquinolopez/Bayesian_Carbon_Acc/blob/main/Figures/Posterior_parameters.pdf)
+![Posterior Distributios of the $w(x)$ function](https://github.com/maquinolopez/Bayesian_Carbon_Acc/blob/main/Figures/Posterior_parameters.png)
 
 Lastly, this posterior parameters can be use to plot the posterior transition function. 
 
-![Posterior transition function](https://github.com/maquinolopez/Bayesian_Carbon_Acc/blob/main/Figures/Cat_limit.pdf)
+![Posterior transition function](https://github.com/maquinolopez/Bayesian_Carbon_Acc/blob/main/Figures/Cat_limit.png)
 
 
 
