@@ -8,13 +8,13 @@
 rm(list = ls())
 
 Taco <- function(core, folder, 
-                 th = 100, s_size = as.integer(1e+3), burnin = as.integer(1e+3) ,
-                 ACboun_mean_prior= 30, ACboun_sd_prior= 5 ,  
-                 delay_mean_prior = 10, delay_sd_prior = 3, 
-                 peat_add_mean = 500 , peat_add_sd = 4.4,
-                 alpha_mean = .4, alpha_sd = .13 ,
-                 alpha2_mean = .0004, alpha2_sd = .00013 ,
-                 epsilon = 1e-2, 
+                 th = 100, s_size = as.integer(1e+3), burnin = as.integer(1e+3) , # MCMC parameters
+                 ACboun_mean_prior= 30, ACboun_sd_prior= 5 ,  # Prior for the boundery
+                 delay_mean_prior = 10, delay_sd_prior = 3,   # Delay parameter
+                 peat_add_mean = 500 , peat_add_sd = 400.4,   # peat addition
+                 alpha_mean = .4, alpha_sd = .13 ,            # decay Acre
+                 alpha2_mean = .0004, alpha2_sd = .00013 ,    # decay Cat
+                 epsilon = 1e-2,                              # tolerance parameter
                  newrun = TRUE){
   #### Read data and prepare variables ####
   Data <- read.csv(paste0(folder, '/', core,'/', core, '.csv'))
@@ -41,9 +41,9 @@ Taco <- function(core, folder,
   #### Functions ####
   
   age_depth <- function(x){
-    approx(x = bot_depth,y = bot_ages,xout = x)$y
+    approx(x = c(0,bot_depth),y = c(0,bot_ages),xout = x)$y
   }
-  
+
   w <- function(param){ # Pondering function (it is a logistic regression with a fix)
     k <- epsilon1 / param[4] # grow parameter
     v <- param[5]
@@ -54,20 +54,17 @@ Taco <- function(core, folder,
     # ws <- 1/ (1 + exp(-b_0-b_1*depths))
     return(ws)
   }
-  
+
   M_t <- function(m0, alpha, t_x, t_x_delta){
     # t_x is the bottom age
     # t_x_delta is the top age t(x-delta) (note that t_x > t_x_delta)
-    # Mi = (m0/alpha) * ( (t_x - t_x_delta) + (exp(-alpha * t_x ) - exp(-alpha * t_x_delta) )/alpha  )
-    Mi = (-m0/alpha) * (exp(-alpha * t_x ) - exp(-alpha * t_x_delta) )  
-    
-    # if (any(Mi<0)){
-    #   print(t_x - t_x_delta)
-    #   print(exp(-alpha * t_x) - exp(-alpha * t_x_delta))
-    # }
+    Mi = (m0/alpha) * ( (t_x - t_x_delta) + (exp(-alpha * t_x ) - exp(-alpha * t_x_delta) )/alpha  )
+    # Mi = (-m0/alpha) * (exp(-alpha * t_x ) - exp(-alpha * t_x_delta) )
     return(Mi)
   }
-  
+
+
+  len_data <- length(bot_depth)
   m0s <- function(param){
     # param[1]: peat addition
     # param[2] and param[3]: are decomposition  (acrotelm - catotelm)
@@ -76,57 +73,66 @@ Taco <- function(core, folder,
     # M_t(m0, alpha, t_x, t_x_delta)
     # t_x is the bottom
     # t_x_delta is the top age (note that t_x > t_x_delta)
-    T_a = age_depth(param[5] - param[4] ) # this one is at the top 
+    T_a = age_depth(param[5] - param[4] ) # this one is at the top
     T_c = age_depth( param[5] + param[4]  )
-    m0_a <- M_t(param[-c(1,2,3,4,5)],param[2], T_a,0)
-    m0_c <- M_t(m0_a,param[3], T_c - T_a, 0)
-    m0 <- data.frame(m0 = param[-c(1,2,3,4,5)], m0a=m0_a , m0c=m0_c  )
-    # debugging message
-    # if (any(is.na(m0_a))){
-    #   print('soy el modelo de edad')
-    #   print(T_a)
-    #   print(T_c)
-    # }
+
+    # m0_a <- M_t(param[-c(1,2,3,4,5)],param[2], T_a,0)
+    m0_a <- M_t(rep(param[1],len_data),param[2], T_a,0)
+    # Note that this middle section will decay half of the time as acretome and the other as catotelm
+    m0_c <- .5 * (  M_t(m0_a,param[3], T_c - T_a, 0) +  M_t(m0_a,param[2], T_c - T_a, 0) )
+
+    # m0 <- data.frame(m0 = param[-c(1,2,3,4,5)], m0a=m0_a , m0c=m0_c  )
+    m0 <- data.frame(m0 = rep(param[1],len_data), m0a=m0_a , m0c=m0_c  )
+
     return(m0)
   }
-  
+
   simu <- function(param){
     # param[1]: peat addition for the overall system
     # param[2] and param[3]: are decomposition  (acrotelm - catotelm)
-    # param[4] is the delay (\Gamma / 2)  
+    # param[4] is the delay (\Gamma / 2)
     # param[5] is the A/C boundary (\epsilon)
     # param[-c(1,2,3,4,5)] are the section additions
     # Select samples per intervals
-    # note that this like has to change when the age-depth model is moving
+    # Note that this has to change when the age-depth model is moving
     # Calculate the times where the phases changes
-    T_a = param[5] - param[4] 
-    T_c = param[5] + param[4] 
+    T_a = param[5] - param[4]
+    T_c = param[5] + param[4]
     # Calculate the transicion function for each sample
     ws <- w(param)
-    # Calcuate which samples are in each phase
+    # Calculate which samples are in each phase
     indx_phase1 <- which(bot_depth <= T_a)
     indx_phase2 <- which(bot_depth > T_a & bot_depth <= T_c)
     indx_phase3 <- which(bot_depth > T_c)
-    # get the m0s for each phase 
+    # get the m0s for each phase
     M_0s <- m0s(param)
+    # print(M_0s)
     # Make Ts ages
     T_a = age_depth(param[5] - param[4] )
     T_c = age_depth(param[5] + param[4] )
     # get the simulation for each phase
+    # mass in the first phase
     mi_1 <- M_t(M_0s$m0[indx_phase1], param[2], bot_ages[indx_phase1], top_ages[indx_phase1])
+    # mass in the second phase
     mi_2 <- ws[indx_phase2] * M_t(M_0s$m0a[indx_phase2], param[2], bot_ages[indx_phase2] - T_a, top_ages[indx_phase2] - T_a) +
-      (1 - ws[indx_phase2]) * M_t(M_0s$m0a[indx_phase2], param[3], bot_ages[indx_phase2] - T_a, top_ages[indx_phase2] - T_a) 
-    mi_3 <- M_t(M_0s$m0c[indx_phase3],param[3], bot_ages[indx_phase3] - T_c, top_ages[indx_phase3] - T_c ) 
+      (1 - ws[indx_phase2]) * M_t(M_0s$m0a[indx_phase2], param[3], bot_ages[indx_phase2] - T_a, top_ages[indx_phase2] - T_a)
+    # mass in the last phase
+    mi_3 <- M_t(M_0s$m0c[indx_phase3],param[3], bot_ages[indx_phase3] - T_c, top_ages[indx_phase3] - T_c )
     #
     z <- c(mi_1,mi_2,mi_3)
-    
+
     return(z)
   }
   
+  # Rcpp::sourceCpp("/Users/ma2060/GitHub/Bayesian_Carbon_Acc/simu_functions.cpp")
+  
+  
   ll <- function(param){
     z = simu(param)
+    # z = simu(param, bot_depth, bot_ages, top_ages)
     z = Data$curr_mass_den  - z #c(z[1],diff(z))
     l = dnorm(z,mean = 0,sd = Data$curr_mass_den * error_p, log = TRUE)
+    
     # mask = !(l == Inf)
     # l <- sum(l[mask]) 
     return(-sum(l))
@@ -143,7 +149,7 @@ Taco <- function(core, folder,
     # param[5] is the A/C boundary (\epsilon)
     d1 = d1 + dnorm(param[5], mean= ACboun_mean_prior, sd = ACboun_sd_prior, log =TRUE)
     # param[-c(1,2,3,4,5)]  all other m0s
-    d1 = d1 + sum(dnorm(param[-c(1,2,3,4,5)] , mean=param[1] , sd = .1 * peat_add_sd, log =TRUE) ) / n_data
+    # d1 = d1 + sum(dnorm(param[-c(1,2,3,4,5)] , mean=param[1] , sd = .1 * peat_add_sd, log =TRUE) ) / n_data
     return( -d1 )
   }
   
@@ -155,31 +161,35 @@ Taco <- function(core, folder,
   ini = function(param){
     m0 = abs(rnorm(1,mean = peat_add_mean ,sd =  peat_add_sd ))
     alphas = rev(sort(abs(rnorm(2,mean = c(alpha_mean,.01*alpha_mean) ,sd =  alpha_sd )  )))
-    delay = abs(rnorm(1, mean= 5, sd = 1))
-    AC_bou = abs(rnorm(1, mean= 30, sd = 2))
-    allothers = abs(rnorm(n_data,mean = m0 ,sd = .01 * peat_add_sd ))
-    ini0 <- c(m0,alphas,delay,AC_bou,allothers)
+    delay = abs(rnorm(1, mean= 3 * mean(diff(bot_depth)), sd = 3))
+    AC_bou = runif(1, min= bot_depth[2], max = tail(bot_depth,1)  )
+    # AC_bou = abs(rnorm(1, mean= mean(bot_depth), sd = 2))
+    # allothers = abs(rnorm(n_data,mean = m0 ,sd = .01 * peat_add_sd ))
+    # ini0 <- c(m0,alphas,delay,AC_bou,allothers)
+    ini0 <- c(m0,alphas,delay,AC_bou)
     return(ini0)
   }
   
   m0_upp <- 5e+3
-  alpha_lim <- 1e+0
+  alpha_lim <- 1e+1
   l_depth <- tail(bot_depth,1)
+  b_depth <- bot_depth[1]
   
   supp <- function (param){
-    T_a = param[5] - param[4]
-    T_c = param[5] + param[4]
+    # depths at which the phases changes
+    d_a = param[5] - param[4]
+    d_c = param[5] + param[4]
     
     upper = c( m0_upp, # peat addition (m0) top lim
                alpha_lim, # alpha acretelm 
                param[2], # alpha2 catotelm
-               delay_mean_prior*4, # delay should not be bigger than 4 times the prior one
-               l_depth -  2*param[4] , # the AC boundery should be smaller than the last depth
-               rep(m0_upp,n_data) )
-    
-    if(!any(is.na(param)) ){
-      if (all(param>0) ){
-        if(all(param < upper) & T_a > 1 & T_c < l_depth-1 ){
+               delay_mean_prior * 4, # delay should not be bigger than 4 times the prior one
+               l_depth -  2 * param[4] #, # the AC boundery should be smaller than the last depth
+               # rep(m0_upp,n_data)  # this line is to add multiple m0s
+               ) 
+    # if(!any(is.na(param)) ){
+      if (all(param>0) & d_a > b_depth  ){
+        if(all(param < upper) & d_a > 1 & d_c < l_depth-1 ){
           return(TRUE)
         }else{
           return(FALSE)
@@ -187,7 +197,7 @@ Taco <- function(core, folder,
       }else{
         return(FALSE)
       }
-    }else{return(FALSE)}
+    # }else{return(FALSE)}
   }
   
   #### Running Twalk ####
@@ -212,6 +222,7 @@ Taco <- function(core, folder,
   }
   
   th = length(x1) * th
+  
   twalk <- Runtwalk(dim = length(x1),  
                     Tr = s_size,thinning = th, burnin= burnin *th,
                     Obj = obj, Supp = supp,
@@ -259,15 +270,15 @@ Taco <- function(core, folder,
   plots <- function(saveplot = TRUE){
     
     if(saveplot){pdf(paste0(folder,core,'/Taco_',core,'.pdf'))}
-    layout(matrix(c(1,1,1,2,2,2,3,3,3,4,4,4,
-                    1,1,1,2,2,2,3,3,3,4,4,4,
-                    1,1,1,2,2,2,3,3,3,4,4,4,
-                    5,5,5,5,6,6,6,6,6,6,6,6,
-                    5,5,5,5,6,6,6,6,6,6,6,6,
-                    5,5,5,5,6,6,6,6,6,6,6,6,
-                    5,5,5,5,6,6,6,6,6,6,6,6,
-                    5,5,5,5,6,6,6,6,6,6,6,6,
-                    5,5,5,5,6,6,6,6,6,6,6,6), 9, 12, byrow = TRUE))
+    layout(matrix(c(1,1,1,2,2,2,3,3,3,4,4,4,7,7,7,8,8,8,
+                    1,1,1,2,2,2,3,3,3,4,4,4,7,7,7,8,8,8,
+                    1,1,1,2,2,2,3,3,3,4,4,4,7,7,7,8,8,8,
+                    5,5,5,5,5,6,6,6,6,6,6,6,6,6,6,6,6,6,
+                    5,5,5,5,5,6,6,6,6,6,6,6,6,6,6,6,6,6,
+                    5,5,5,5,5,6,6,6,6,6,6,6,6,6,6,6,6,6,
+                    5,5,5,5,5,6,6,6,6,6,6,6,6,6,6,6,6,6,
+                    5,5,5,5,5,6,6,6,6,6,6,6,6,6,6,6,6,6,
+                    5,5,5,5,5,6,6,6,6,6,6,6,6,6,6,6,6,6), 9, 18, byrow = TRUE))
     # Plot the energy
     {
       plot(twalk$Us[-1],col='gray40',type='l',yaxt="n",ylab='',xlab = 'iterations',main = " log objective" )
@@ -277,7 +288,7 @@ Taco <- function(core, folder,
     # Plot M0
     {
       d <- density(sample[,1])
-      plot(d,col='blue',type='l',yaxt="n",ylab='',xlab = 'g/cm^2' , main = 'Global m0' )
+      plot(d,col='blue',type='l',yaxt="n",ylab='',xlab = 'g/m^2' , main = 'Global m0' )
     }
     # Plot alpha acretelm
     {
@@ -350,18 +361,18 @@ Taco <- function(core, folder,
       title("Transition", line=1, outer=TRUE, adj=0)  # Label for the new x-axis
     }
     
-    # # Plot delay
-    # {
-    #   d <- density(sample[,4])
-    #   plot(d,col='blue',type='l',yaxt="n",ylab='',xlab = 'yr' , main = 'Delay' )
-    # }
-    # # Plot A/C Boundery
-    # 
-    # {
-    #   d <- density(sample[,5])
-    #   plot(d,col='blue',type='l',yaxt="n",ylab='',xlab = 'yr'  , main = 'A/C' )
-    # }
-    # 
+    # Plot delay
+    {
+      d <- density(sample[,4])
+      plot(d,col='blue',type='l',yaxt="n",ylab='',xlab = 'cm' , main = 'Delay' )
+    }
+    # Plot A/C Boundery
+
+    {
+      d <- density(sample[,5])
+      plot(d,col='blue',type='l',yaxt="n",ylab='',xlab = 'cm'  , main = 'A/C' )
+    }
+
     
     if(saveplot){dev.off()}
   }
@@ -422,6 +433,11 @@ source_twalk <- function(folder) {
 
 # Nota: revisar unidades
 
+# 186
 # "Tasiusaq"
+
+# 199
 # "Wylde Lake bog"
+
+# 140
 # "PAT-HB-2010"
