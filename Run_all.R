@@ -4,25 +4,38 @@ source('TACO.R')
 folder_names <- basename(list.dirs())[-1]
 
 
-for (i in 58:202){
-  print(folder_names[i])
-  tac <- try(Taco(folder_names[i] , '~/Documents/Taco/', th = 25 ,
-                  burnin = 2e+3, s_size = 2.5e+3, newrun = F ), silent = TRUE)
-  if(inherits(tac, "try-error")) {
-    Taco(folder_names[i] , '~/Documents/Taco/', th = 25 ,
-         burnin = 2e+3, s_size = 2.5e+3, newrun = T )
-  }
-  
-}
+# for (i in 14:202){
+#   print(folder_names[i])
+# 
+#     Taco(folder_names[i] , '~/Documents/Taco/', th = 50 ,
+#          burnin = 3.0e+3, s_size = 2.5e+3, newrun = T )
+# 
+# }
 
 
-                                        
+
+# 5
+tac <- Taco(folder_names[12] , '~/Documents/Taco/', th = 50,
+     burnin = 5.0e+3, s_size = 2.5e+3, newrun = T )
+# 
+# 
+# tac$Bd_mat
+# 
+# tac <- Taco('Dead_Island_Swindles' , '~/Documents/Taco/', th = 50 ,
+#                        burnin = 3.0e+3, s_size = 2.5e+3, newrun = T )
 
 
+# tac <- Taco('Wylde Lake bog' , '~/Documents/Taco/', th = 50 ,
+            # burnin = 3.0e+3, s_size = 2.5e+3, newrun = T )
+
+
+# print(tac$Bd_mat)
  # tac <-Taco("Galvarne_Moraine_Ridge_Bjorck", '~/Documents/Taco/', th = 25 ,
             # burnin = 2e+3, s_size = 2.5e+3, newrun = T )
 
 # 'Aero_M4' # Este da un erroir desde el inicio investigar
+
+# '"JBL_2"' dows not iniciate 
 
 # Nota: revisar unidades
 
