@@ -1,8 +1,7 @@
 ###########################################
 ###          Bayesian Weighted Clymo          ###
 ###          By Marco A. Aquino-Lopez         ###
-### possible names:
-### BREAD - Bayesian Regression Estimation for Acrotelm Dynamics.
+### 
 ### TACO - Transitional Analysis through Clymo Optimization.
 ###########################################
 rm(list = ls())

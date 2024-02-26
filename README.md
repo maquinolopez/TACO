@@ -1,20 +1,50 @@
-# Bayesian Weighted Clymo
-
-This is a variation of the acrotelm and catotelm modelling approach. In the traditional approach a "hard" boundary is chosen and two different Clymo approaches are fitted to the data. In order to allow for a more realistic transition, this approach considers a weigh function ($w(x)$), which range is between 0 and 1 and domain is within the length of the core. In this model, two Clymo models are assumed to affect the core and then weighted by $w(x)$. Function $w(x)$ is assumed to be monotonic in order to coincide with the idea that for peat which is below the water-table only ca totem effects take effect. 
-
-## Results
-
-The outputs of this method are the posterior distributions of the parameters of both Clymo models. 
-
-![Posterior Distributios of both Climo models](https://github.com/maquinolopez/Bayesian_Carbon_Acc/blob/main/Figures/Posterior_parameters.png)
-
-Because the model also has to infer the $w(x)$ function the posterior distribution of the parameters of the function can also be obtained.
-
-![Posterior Distributios of the $w(x)$ function](https://github.com/maquinolopez/Bayesian_Carbon_Acc/blob/main/Figures/Bon_posterior.png)
-
-Lastly, this posterior parameters can be use to plot the posterior transition function. 
-
-![Posterior transition function](https://github.com/maquinolopez/Bayesian_Carbon_Acc/blob/main/Figures/Cat_limit.png)
 
 
+# TACO: Transitional Analysis through Clymo Optimization
 
+The TACO (Transitional Analysis through Clymo Optimization) ers a novel Bayesian approach to understanding the complex carbon dynamics within peatland ecosystems, extending beyond traditional models to provide a more nuanced view of carbon flux and decay processes. Inspired by the classic Clymo model, this package introduces a sophisticated Bayesian framework capable of accommodating variable carbon influxes even in the deepest sediment layers and allowing for smooth transitions between different system states within peatlands.
+
+
+### Installation
+
+Download the Taco.R and the twalk.R files. soruce the file:
+
+```R
+source(\PATH\TO\Taco.R)
+
+```
+
+
+### Features
+
+- **Bayesian Inference:** Utilize Bayesian statistics to make accurate inferences about peatland carbon dynamics.
+- **Weighted Function:** A unique weighted function facilitates the modeling of transitions between different peatland systems, reflecting changes in carbon decomposition rates.
+- **Flexible Modeling:** Accommodates variable carbon influxes, overcoming limitations of traditional models that fail to capture these variations, especially in deeper sediment layers.
+- **Peatland Management Implications:** Offers insights into peatland management and the global carbon cycle, supporting research and conservation efforts.
+
+### Usage
+
+The package includes functions for constructing the Bayesian model, performing inference, and analyzing peatland carbon dynamics. Example usage:
+
+```R
+setwd('~/Documents/Taco/')
+source('TACO.R')
+tac <- Taco(CORE_NAME , '~/Documents/Taco/')
+```
+
+### Documentation
+
+_Working on it_
+
+
+### License
+
+This package is released under the MIT License. See the LICENSE file for more details.
+
+### Citation
+
+Manuscript in process
+
+### Contact
+
+For any questions or feedback, please contact Marco A Aquino-Lopez at aquino@cimat.mx.
