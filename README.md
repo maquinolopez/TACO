@@ -2,7 +2,7 @@
 
 # TACO: Transitional Analysis through Clymo Optimization
 
-<img align="right" src="logo.jpeg" alt="TACO Package Logo" width="400">
+<img align="right" src="logo.jpeg" alt="TACO Package Logo" width="380">
 
 The TACO (Transitional Analysis through Clymo Optimization) ers a novel Bayesian approach to understanding the complex carbon dynamics within peatland ecosystems, extending beyond traditional models to provide a more nuanced view of carbon flux and decay processes. Inspired by the classic Clymo model, this package introduces a sophisticated Bayesian framework capable of accommodating variable carbon influxes even in the deepest sediment layers and allowing for smooth transitions between different system states within peatlands.
 
